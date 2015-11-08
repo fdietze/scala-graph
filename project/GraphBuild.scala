@@ -1,5 +1,7 @@
 import sbt._
 import Keys._
+import org.scalajs.sbtplugin.ScalaJSPlugin
+import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
 
 object GraphBuild extends Build {
 
@@ -11,18 +13,20 @@ object GraphBuild extends Build {
       version   := Version.all,
       publishTo := None
 	  ),
-    aggregate = Seq(core, constrained, dot, json)
+    aggregate = Seq(corejs, core, constrained, dot, json)
   )
 
-  lazy val core = Project(
-    id = "Graph-core",
-    base = file("core"),
-    settings = defaultSettings ++ Seq(
+  lazy val coreCross = crossProject.crossType(CrossType.Pure).in(file("core"))
+    .settings(defaultCrossSettings:_*)
+    .jvmSettings(defaultSettings:_*)
+    .settings(
       name      := "Graph Core",
       version   := Version.core,
-      libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.12.5"
+      libraryDependencies += "org.scalacheck" %%% "scalacheck" % "1.12.5"
     )
-  )
+
+  lazy val core = coreCross.jvm
+  lazy val corejs = coreCross.js
 
   lazy val constrained = Project(
     id = "Graph-constrained",
@@ -62,16 +66,19 @@ object GraphBuild extends Build {
     )
   ) dependsOn (core)
 
-  private lazy val defaultSettings = Defaults.defaultSettings ++ Seq(
-    scalaVersion := Version.compiler,
+  private lazy val defaultCrossSettings = Seq(
+      scalaVersion := Version.compiler,
+      organization := "com.assembla.scala-incubator"
+    ) ++ GraphSonatype.settings
+
+  private lazy val defaultSettings = defaultCrossSettings ++ Seq(
   	crossScalaVersions  := Seq(scalaVersion.value, Version.compiler_2),
-    organization := "com.assembla.scala-incubator",
     parallelExecution in Test := false,
     scalacOptions in (Compile, doc) <++= (name, version) map {
       Opts.doc.title(_) ++ Opts.doc.version(_)
     },
-    // prevents sbteclipse from including java source directories
-    unmanagedSourceDirectories in Compile <<= (scalaSource in Compile)(Seq(_)),
+    // // prevents sbteclipse from including java source directories
+    // unmanagedSourceDirectories in Compile <<= (scalaSource in Compile)(Seq(_)), TODO: this setting causes an empty crossProject.jvm build
     unmanagedSourceDirectories in Test    <<= (scalaSource in Test)   (Seq(_)),
     scalacOptions in (Compile, doc) ++= List("-diagrams", "-implicits"),
     scalacOptions in (Compile, doc) <++= baseDirectory map { d =>
@@ -90,5 +97,5 @@ object GraphBuild extends Build {
         )
       case _ => Nil
     })
-  ) ++ GraphSonatype.settings
+  )
 }
