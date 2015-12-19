@@ -1,7 +1,9 @@
 package scala.collection
 
 /** Contains types that increase access to some `private[scala]` members of
- *  `scala.collection` in order to make them reusable in any package. 
+ *  `scala.collection` in order to make them reusable in any package.
+ *  
+ *  Note that this has gotten obsolete with Scala 2.11. 
  */
 object Abstract {
   type Traversable[A] = scala.collection.AbstractTraversable[A]

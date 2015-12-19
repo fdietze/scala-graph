@@ -1,7 +1,7 @@
 package scalax.collection
 
 import scala.language.{higherKinds, implicitConversions}
-import scala.collection.{AbstractIterable, AbstractTraversable}
+import collection.Abstract
 import scala.collection.mutable.{ArrayBuffer, Builder}
 import scala.math.min
 
@@ -107,7 +107,7 @@ trait GraphTraversal[N, E[X] <: EdgeLikeIn[X]] extends GraphBase[N,E] {
    *  @tparam T one of `A` or `(Int, Iterable[A])`
    *  @define NEWFLAVOR Creates a new flavor of this `TopologicalOrder` or `LayeredTopologicalOrder` */
   sealed abstract class AbstractTopologicalOrder[+A, +T]
-      extends AbstractTraversable[T] {
+      extends Abstract.Traversable[T] {
     
     protected val layers: Layers
     protected def toA: NodeT => A
@@ -163,7 +163,7 @@ trait GraphTraversal[N, E[X] <: EdgeLikeIn[X]] extends GraphBase[N,E] {
   /** Layers of a topological order of a graph or of an isolated graph component.
    *  The layers of a topological sort can roughly be defined as follows:
    *      a. layer 0 contains all nodes having no predecessors,
-   *      a. layer n contains those nodes that have only predecessors in anchestor layers
+   *      a. layer n contains those nodes that have only predecessors in ancestor layers
    *         with at least one of them contained in layer n - 1
    *  @tparam A one of `NodeT`, `N` */
   final class LayeredTopologicalOrder[+A] protected[collection](
@@ -184,7 +184,7 @@ trait GraphTraversal[N, E[X] <: EdgeLikeIn[X]] extends GraphBase[N,E] {
     def toLayered: LayeredTopologicalOrder[A] = this
     
     // O(1) view to avoid exposure of the possibly mutable `layers`
-    private def toIterable(iSeq: IndexedSeq[NodeT]): Iterable[A] = new AbstractIterable[A] {
+    private def toIterable(iSeq: IndexedSeq[NodeT]): Iterable[A] = new Abstract.Iterable[A] {
       def iterator: Iterator[A] = new AbstractIterator[A] {
         private val it = ordered(iSeq).toIterator
         def hasNext: Boolean = it.hasNext
@@ -566,7 +566,7 @@ trait GraphTraversal[N, E[X] <: EdgeLikeIn[X]] extends GraphBase[N,E] {
   }
   protected object SubgraphProperties {
     def apply[A](t: Traversable[A], nodeFilter: NodeFilter, edgeFilter: EdgeFilter) =
-      new AbstractTraversable[A] with SubgraphProperties {
+      new Abstract.Traversable[A] with SubgraphProperties {
         def foreach[U](f: A => U): Unit = t foreach f
         def subgraphNodes = nodeFilter
         def subgraphEdges = edgeFilter
